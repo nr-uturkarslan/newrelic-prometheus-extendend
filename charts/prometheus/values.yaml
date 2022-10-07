@@ -30,7 +30,7 @@ serviceAccounts:
 alertmanager:
   ## If false, alertmanager will not be installed
   ##
-  enabled: true
+  enabled: false
 
   ## Use a ClusterRole (and ClusterRoleBinding)
   ## - If set to false - we define a Role and RoleBinding in the defined namespaces ONLY
@@ -473,7 +473,7 @@ configmapReload:
 kubeStateMetrics:
   ## If false, kube-state-metrics sub-chart will not be installed
   ##
-  enabled: true
+  enabled: false # let default be false
 
 ## kube-state-metrics sub-chart configurable values
 ## Please see https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics
@@ -483,7 +483,7 @@ kubeStateMetrics:
 nodeExporter:
   ## If false, node-exporter will not be installed
   ##
-  enabled: true
+  enabled: false # let default be false
 
   ## If true, node-exporter pods share the host network namespace
   ##
@@ -724,7 +724,10 @@ server:
   # List of flags to override default parameters, e.g:
   # - --enable-feature=agent
   # - --storage.agent.retention.max-time=30m
-  defaultFlagsOverride: []
+  defaultFlagsOverride:
+    - --enable-feature=agent
+    - --config.file=/etc/config/prometheus.yml
+    - --storage.agent.retention.max-time=30m
 
   extraFlags:
     - web.enable-lifecycle
@@ -758,6 +761,13 @@ server:
   ## https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
   ##
   remoteWrite: []
+    # - url: https://metric-api.eu.newrelic.com/prometheus/v1/write?prometheus_server=<name>
+    #   bearer_token: "NEWRELIC_LICENSE_KEY"
+    #   write_relabel_configs:
+    #   - source_labels: [namespace]
+    #     regex: <namespace>
+    #     action: keep
+
   ## https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_read
   ##
   remoteRead: []
@@ -1171,7 +1181,7 @@ server:
 pushgateway:
   ## If false, pushgateway will not be installed
   ##
-  enabled: true
+  enabled: false
 
   ## Use an alternate scheduler, e.g. "stork".
   ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
@@ -1466,12 +1476,12 @@ serverFiles:
   rules: {}
 
   prometheus.yml:
-    rule_files:
-      - /etc/config/recording_rules.yml
-      - /etc/config/alerting_rules.yml
-    ## Below two files are DEPRECATED will be removed from this default values file
-      - /etc/config/rules
-      - /etc/config/alerts
+    rule_files: null
+    #   - /etc/config/recording_rules.yml
+    #   - /etc/config/alerting_rules.yml
+    # ## Below two files are DEPRECATED will be removed from this default values file
+    #   - /etc/config/rules
+    #   - /etc/config/alerts
 
     scrape_configs:
       - job_name: prometheus
