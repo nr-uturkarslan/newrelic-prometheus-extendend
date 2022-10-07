@@ -1,4 +1,4 @@
-{{- if and .Values.server.enabled .Values.rbac.create .Values.server.useExistingClusterRoleName .Values.server.namespaces -}}
+{{- if and .Values.server.enabled .Values.rbac.create .Values.server.namespaces -}}
 {{ range $.Values.server.namespaces -}}
 ---
 apiVersion: {{ template "rbac.apiVersion" $ }}
@@ -14,7 +14,7 @@ subjects:
 {{ include "prometheus.namespace" $ | indent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ $.Values.server.useExistingClusterRoleName }}
+  kind: Role
+  name: {{ template "prometheus.server.fullname" $ }}
 {{ end -}}
 {{ end -}}
