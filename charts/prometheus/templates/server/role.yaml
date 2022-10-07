@@ -1,21 +1,14 @@
 {{- if and .Values.server.enabled .Values.rbac.create .Values.server.namespaces -}}
-apiVersion: {{ template "rbac.apiVersion" . }}
+{{ range $.Values.server.namespaces -}}
+---
+apiVersion: {{ template "rbac.apiVersion" $ }}
 kind: Role
 metadata:
   labels:
-    {{- include "prometheus.server.labels" . | nindent 4 }}
-  name: {{ template "prometheus.server.fullname" . }}
+    {{- include "prometheus.server.labels" $ | nindent 4 }}
+  name: {{ template "prometheus.server.fullname" $ }}
+  namespace: {{ . }}
 rules:
-{{- if .Values.podSecurityPolicy.enabled }}
-  - apiGroups:
-    - extensions
-    resources:
-    - podsecuritypolicies
-    verbs:
-    - use
-    resourceNames:
-    - {{ template "prometheus.server.fullname" . }}
-{{- end }}
   - apiGroups:
       - ""
     resources:
@@ -26,4 +19,5 @@ rules:
       - get
       - list
       - watch
+{{- end }}
 {{- end }}
