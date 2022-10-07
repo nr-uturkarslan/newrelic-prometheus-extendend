@@ -19,7 +19,7 @@ newrelicPrometheusEndpointEu="https://metric-api.eu.newrelic.com/prometheus/v1/w
 ### Prometheus ###
 helm dependency update "../charts/prometheus"
 
-## Example
+## Example 1
 # - Create ClusterRole and ClusterRoleBinding
 # - Install kube-state-metrics and node-exporter additionally
 # - Scrape everything
@@ -30,11 +30,13 @@ helm upgrade prometheus \
   --debug \
   --create-namespace \
   --namespace $namespacePrometheus \
+  --set kubeStateMetrics.enabled=true \
+  --set nodeExporter.enabled=true \
   --set server.remoteWrite[0].url=$newrelicPrometheusEndpointEu \
   --set server.remoteWrite[0].bearer_token=$NEWRELIC_LICENSE_KEY \
   "../charts/prometheus"
 
-## Example
+## Example 2
 # - Create Role and RoleBinding
 # - Scrape only services, endpoints and pods
 # - Filter scraped data by 2 specific namespaces
