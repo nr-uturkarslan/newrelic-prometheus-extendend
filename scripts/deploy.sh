@@ -23,7 +23,7 @@ helm dependency update "../charts/prometheus"
 # - Create ClusterRole and ClusterRoleBinding
 # - Install kube-state-metrics and node-exporter additionally
 # - Scrape everything
-# - Send data to 1 New Relic account
+# - Send data to 1 New Relic account without transformation
 helm upgrade prometheus \
   --install \
   --wait \
@@ -35,6 +35,12 @@ helm upgrade prometheus \
   --set server.remoteWrite[0].url=$newrelicPrometheusEndpointEu \
   --set server.remoteWrite[0].bearer_token=$NEWRELIC_LICENSE_KEY \
   "../charts/prometheus"
+
+# helm template prometheus \
+#   --create-namespace \
+#   --namespace $namespacePrometheus \
+#   "../charts/prometheus" \
+#   | grep -A 100 '# Source: newrelic-prometheus-extended/templates/server/cm.yaml'
 
 ## Example 2
 # - Create Role and RoleBinding
