@@ -802,9 +802,9 @@ serverFiles:
 
   ## Records configuration
   ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
-  recording_rules.yml: {}
+  recording_rules_yml: {}
 
-  prometheus.yml:
+  prometheus_yml:
     rule_files: null
     #   - /etc/config/recording_rules.yml
 
