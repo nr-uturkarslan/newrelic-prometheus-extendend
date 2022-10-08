@@ -1,4 +1,4 @@
-{{- if and .Values.server.enabled .Values.rbac.create .Values.server.namespaces -}}
+{{- if and .Values.server.enabled .Values.rbac.create (eq .Values.newrelic.scrape_nodes false) .Values.newrelic.namespaces -}}
 {{ range $.Values.server.namespaces -}}
 ---
 apiVersion: {{ template "rbac.apiVersion" $ }}

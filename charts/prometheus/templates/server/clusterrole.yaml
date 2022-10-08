@@ -1,4 +1,4 @@
-{{- if and .Values.server.enabled .Values.rbac.create (empty .Values.server.namespaces) (empty .Values.server.useExistingClusterRoleName) -}}
+{{- if and .Values.server.enabled .Values.rbac.create (empty .Values.server.useExistingClusterRoleName) (empty .Values.newrelic.namespaces) -}}
 apiVersion: {{ template "rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
@@ -19,9 +19,11 @@ rules:
   - apiGroups:
       - ""
     resources:
+{{- if .Values.newrelic.scrape_nodes }}
       - nodes
       - nodes/proxy
       - nodes/metrics
+{{- end }}
       - services
       - endpoints
       - pods

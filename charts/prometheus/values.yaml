@@ -1,3 +1,49 @@
+newrelic:
+
+  ## The flags below determine how to create which k8s objects regarding rbac
+  ## - ClusterRole
+  ## - ClusterRoleBinding
+  ## - Role
+  ## - RoleBinding
+  ##
+  scrape_nodes: false
+
+  ## List of the namespaces to be scraped
+  ##
+  namespaces: []
+    # - ns1
+    # - ns2
+
+  ### REMARK ###
+  ## Case 1:
+  ##   Input
+  ##   - scrape_nodes: true
+  ##   - namespaces: []
+  ##   Output
+  ##   - a cluster role with access on all resources
+  ##   - a cluster role binding for the cluster role
+  ## Case 2:
+  ##   Input
+  ##   - scrape_nodes: true
+  ##   - namespaces: null
+  ##   Output
+  ##   - a cluster role with access on just [nodes, nodes/proxy, nodes/metrics]
+  ##   - a cluster role binding for the cluster role
+  ## Case 3:
+  ##   Input
+  ##   - scrape_nodes: false
+  ##   - namespaces: [] or null
+  ##   Output
+  ##   - a cluster role with access on just [services, endpoints, pods, ingresses, configmaps]
+  ##   - a cluster role binding for the cluster role
+  ## Case 4:
+  ##   Input
+  ##   - scrape_nodes: false
+  ##   - namespaces: [namespace1, namespace2]
+  ##   Output
+  ##   - a role in each given namespaces with access on just [services, endpoints, pods, ingresses, configmaps]
+  ##   - a role binding in each given namespaces for the cluster role
+
 rbac:
   create: true
 
