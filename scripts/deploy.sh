@@ -17,7 +17,7 @@ newrelicPrometheusEndpointUs="https://metric-api.newrelic.com/prometheus/v1/writ
 newrelicPrometheusEndpointEu="https://metric-api.eu.newrelic.com/prometheus/v1/write?prometheus_server=${clusterName}"
 
 ### Prometheus ###
-helm dependency update "../charts/prometheus"
+# helm dependency update "../charts/prometheus"
 
 ## Example 1
 # - Create ClusterRole and ClusterRoleBinding
