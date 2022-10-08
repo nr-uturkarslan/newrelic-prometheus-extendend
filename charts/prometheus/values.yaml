@@ -800,36 +800,13 @@ ruleFiles: {}
 ##
 serverFiles:
 
-  ## Alerts configuration
-  ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-  alerting_rules.yml: {}
-  # groups:
-  #   - name: Instances
-  #     rules:
-  #       - alert: InstanceDown
-  #         expr: up == 0
-  #         for: 5m
-  #         labels:
-  #           severity: page
-  #         annotations:
-  #           description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes.'
-  #           summary: 'Instance {{ $labels.instance }} down'
-  ## DEPRECATED DEFAULT VALUE, unless explicitly naming your files, please use alerting_rules.yml
-  alerts: {}
-
   ## Records configuration
   ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/recording_rules/
   recording_rules.yml: {}
-  ## DEPRECATED DEFAULT VALUE, unless explicitly naming your files, please use recording_rules.yml
-  rules: {}
 
   prometheus.yml:
     rule_files: null
     #   - /etc/config/recording_rules.yml
-    #   - /etc/config/alerting_rules.yml
-    # ## Below two files are DEPRECATED will be removed from this default values file
-    #   - /etc/config/rules
-    #   - /etc/config/alerts
 
     scrape_configs:
       - job_name: prometheus
@@ -1209,33 +1186,6 @@ serverFiles:
           - source_labels: [__meta_kubernetes_pod_phase]
             regex: Pending|Succeeded|Failed|Completed
             action: drop
-
-# adds additional scrape configs to prometheus.yml
-# must be a string so you have to add a | after extraScrapeConfigs:
-# example adds prometheus-blackbox-exporter scrape config
-extraScrapeConfigs:
-  # - job_name: 'prometheus-blackbox-exporter'
-  #   metrics_path: /probe
-  #   params:
-  #     module: [http_2xx]
-  #   static_configs:
-  #     - targets:
-  #       - https://example.com
-  #   relabel_configs:
-  #     - source_labels: [__address__]
-  #       target_label: __param_target
-  #     - source_labels: [__param_target]
-  #       target_label: instance
-  #     - target_label: __address__
-  #       replacement: prometheus-blackbox-exporter:9115
-
-# Adds option to add alert_relabel_configs to avoid duplicate alerts in alertmanager
-# useful in H/A prometheus with different external labels but the same alerts
-alertRelabelConfigs:
-  # alert_relabel_configs:
-  # - source_labels: [dc]
-  #   regex: (.+)\d+
-  #   target_label: dc
 
 networkPolicy:
   ## Enable creation of NetworkPolicy resources.
