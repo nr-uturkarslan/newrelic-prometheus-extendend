@@ -37,6 +37,13 @@ data:
       - job_name: 'kubernetes-apiservers'
         kubernetes_sd_configs:
           - role: endpoints
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         scheme: https
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
@@ -54,6 +61,13 @@ data:
           insecure_skip_verify: true
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         kubernetes_sd_configs:
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
           - role: node
         relabel_configs:
           - action: labelmap
@@ -73,6 +87,13 @@ data:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         kubernetes_sd_configs:
           - role: node
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         relabel_configs:
           - action: labelmap
             regex: __meta_kubernetes_node_label_(.+)
@@ -87,6 +108,13 @@ data:
         honor_labels: true
         kubernetes_sd_configs:
           - role: endpoints
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
             action: keep
@@ -128,6 +156,13 @@ data:
         scrape_timeout: 30s
         kubernetes_sd_configs:
           - role: endpoints
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape_slow]
             action: keep
@@ -167,6 +202,13 @@ data:
           module: [http_2xx]
         kubernetes_sd_configs:
           - role: service
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         relabel_configs:
           - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_probe]
             action: keep
@@ -188,6 +230,13 @@ data:
         honor_labels: true
         kubernetes_sd_configs:
           - role: pod
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -229,6 +278,13 @@ data:
         scrape_timeout: 30s
         kubernetes_sd_configs:
           - role: pod
+{{- if .Values.newrelic.namespaces }}
+            namespaces:
+              names:
+{{- range .Values.newrelic.namespaces }}
+                - {{ . }}
+{{- end }}
+{{- end }}
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape_slow]
             action: keep
