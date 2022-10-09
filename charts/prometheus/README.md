@@ -1,226 +1,285 @@
-# Prometheus
+# Chart configuration
 
-[Prometheus](https://prometheus.io/), a [Cloud Native Computing Foundation](https://cncf.io/) project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts if some condition is observed to be true.
+The Prometheus server is configured to run in agent mode in order to allocate the least amount of resources from the cluster. Thereby, it acts as a forwarder as long as the remote backend endpoint is available. If not, it stores the scraped metrics for a while and then drops.
 
-This chart bootstraps a [Prometheus](https://prometheus.io/) deployment on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
+## Scraping parameters
 
-## Prerequisites
+By default, a `ClusterRole` is assigned which basically lets Prometheus scrape everything possible. If you are interested in only some metrics, applying `keep` or `drop` rules still does not change the fact of Prometheus scraping everything first and applying the regex afterwards. Of course, this represents an unnecessary memory usage and therefore is costly.
 
-- Kubernetes 1.16+
-- Helm 3+
+On the other hand, it is possible to limit the reach of Prometheus by manipulating it's given RBAC so that it does not scrape more than what you actually require. To do that, 2 parameters (`newrelic.scrape_case` & `newrelic.namespaces`) are introduced. Principally, they identify what to scrape and depending on the given input various Kubernetes objects (among `ClusterRole`, `ClusterRoleBinding`, `Role` and `RoleBinding`) with specific configurations are created.
 
-## Get Repo Info
+## Additional deployments
 
-```console
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-```
+If you want to install kube-state-metrics and node exporter, you can set the variables `kubeStateMetrics.enabled` and `nodeExporter.enabled` to true, respectively.
 
-_See [helm repo](https://helm.sh/docs/helm/helm_repo/) for command documentation._
+## Forwarding to New Relic
 
-## Install Chart
-
-```console
-helm install [RELEASE_NAME] prometheus-community/prometheus
-```
-
-_See [configuration](#configuration) below._
-
-_See [helm install](https://helm.sh/docs/helm/helm_install/) for command documentation._
-
-## Dependencies
-
-By default this chart installs additional, dependent charts:
-
-- [kube-state-metrics](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-state-metrics)
-
-To disable the dependency during installation, set `kubeStateMetrics.enabled` to `false`.
-
-_See [helm dependency](https://helm.sh/docs/helm/helm_dependency/) for command documentation._
-
-## Uninstall Chart
-
-```console
-helm uninstall [RELEASE_NAME]
-```
-
-This removes all the Kubernetes components associated with the chart and deletes the release.
-
-_See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command documentation._
-
-## Upgrading Chart
-
-```console
-helm upgrade [RELEASE_NAME] [CHART] --install
-```
-
-_See [helm upgrade](https://helm.sh/docs/helm/helm_upgrade/) for command documentation._
-
-### To 15.0
-
-Version 15.0.0 changes the relabeling config, aligning it with the [Prometheus community conventions](https://github.com/prometheus/prometheus/pull/9832). If you've made manual changes to the relabeling config, you have to adapt your changes.
-
-Before you update please execute the following command, to be able to update kube-state-metrics:
-
-```bash
-kubectl delete deployments.apps -l app.kubernetes.io/instance=prometheus,app.kubernetes.io/name=kube-state-metrics --cascade=orphan
-```
-
-### To 9.0
-
-Version 9.0 adds a new option to enable or disable the Prometheus Server. This supports the use case of running a Prometheus server in one k8s cluster and scraping exporters in another cluster while using the same chart for each deployment. To install the server `server.enabled` must be set to `true`.
-
-### To 5.0
-
-As of version 5.0, this chart uses Prometheus 2.x. This version of prometheus introduces a new data format and is not compatible with prometheus 1.x. It is recommended to install this as a new release, as updating existing releases will not work. See the [prometheus docs](https://prometheus.io/docs/prometheus/latest/migration/#storage) for instructions on retaining your old data.
-
-Prometheus version 2.x has made changes to alertmanager, storage and recording rules. Check out the migration guide [here](https://prometheus.io/docs/prometheus/2.0/migration/).
-
-Users of this chart will need to update their alerting rules to the new format before they can upgrade.
-
-### Example Migration
-
-Assuming you have an existing release of the prometheus chart, named `prometheus-old`. In order to update to prometheus 2.x while keeping your old data do the following:
-
-1. Update the `prometheus-old` release. Disable scraping on every component besides the prometheus server, similar to the configuration below:
-
-  ```yaml
-  alertmanager:
-    enabled: false
-  alertmanagerFiles:
-    alertmanager.yml: ""
-  kubeStateMetrics:
-    enabled: false
-  nodeExporter:
-    enabled: false
-  pushgateway:
-    enabled: false
-  server:
-    extraArgs:
-      storage.local.retention: 720h
-  serverFiles:
-    alerts: ""
-    prometheus.yml: ""
-    rules: ""
-  ```
-
-1. Deploy a new release of the chart with version 5.0+ using prometheus 2.x. In the values.yaml set the scrape config as usual, and also add the `prometheus-old` instance as a remote-read target.
-
-   ```yaml
-    prometheus.yml:
-      ...
-      remote_read:
-      - url: http://prometheus-old/api/v1/read
-      ...
-   ```
-
-   Old data will be available when you query the new prometheus instance.
-
-## Configuration
-
-See [Customizing the Chart Before Installing](https://helm.sh/docs/intro/using_helm/#customizing-the-chart-before-installing). To see all configurable options with detailed comments, visit the chart's [values.yaml](./values.yaml), or run these configuration commands:
-
-```console
-helm show values prometheus-community/prometheus
-```
-
-You may similarly use the above configuration commands on each chart [dependency](#dependencies) to see it's configurations.
-
-### Scraping Pod Metrics via Annotations
-
-This chart uses a default configuration that causes prometheus to scrape a variety of kubernetes resource types, provided they have the correct annotations. In this section we describe how to configure pods to be scraped; for information on how other resource types can be scraped you can do a `helm template` to get the kubernetes resource definitions, and then reference the prometheus configuration in the ConfigMap against the prometheus documentation for [relabel_config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config) and [kubernetes_sd_config](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config).
-
-In order to get prometheus to scrape pods, you must add annotations to the the pods as below:
-
+To forward the metrics to New Relic accounts, you should set the following variables:
 ```yaml
-metadata:
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/path: /metrics
-    prometheus.io/port: "8080"
+server:
+  remoteWrite:
+    - url: <new_relic_prometheus_endpoint_1>
+      bearer_token: "NEWRELIC_LICENSE_KEY_1"
+    - url: <new_relic_prometheus_endpoint_1>
+      bearer_token: "NEWRELIC_LICENSE_KEY_2"
 ```
 
-You should adjust `prometheus.io/path` based on the URL that your pod serves metrics from. `prometheus.io/port` should be set to the port that your pod serves metrics from. Note that the values for `prometheus.io/scrape` and `prometheus.io/port` must be enclosed in double quotes.
+where the endpoints for US and EU accounts are:
+- `https://metric-api.newrelic.com/prometheus/v1/write?prometheus_server=<name>"`
+- `https://metric-api.eu.newrelic.com/prometheus/v1/write?prometheus_server=<name>"`
 
-### Sharing Alerts Between Services
+## Metric processing
 
-Note that when [installing](#install-chart) or [upgrading](#upgrading-chart) you may use multiple values override files. This is particularly useful when you have alerts belonging to multiple services in the cluster. For example,
-
-```yaml
-# values.yaml
-# ...
-
-# service1-alert.yaml
-serverFiles:
-  alerts:
-    service1:
-      - alert: anAlert
-      # ...
-
-# service2-alert.yaml
-serverFiles:
-  alerts:
-    service2:
-      - alert: anAlert
-      # ...
-```
-
-```console
-helm install [RELEASE_NAME] prometheus-community/prometheus -f values.yaml -f service1-alert.yaml -f service2-alert.yaml
-```
-
-### RBAC Configuration
-
-Roles and RoleBindings resources will be created automatically for `server` service.
-
-To manually setup RBAC you need to set the parameter `rbac.create=false` and specify the service account to be used for each service by setting the parameters: `serviceAccounts.{{ component }}.create` to `false` and `serviceAccounts.{{ component }}.name` to the name of a pre-existing service account.
-
-> **Tip**: You can refer to the default `*-clusterrole.yaml` and `*-clusterrolebinding.yaml` files in [templates](templates/) to customize your own.
-
-### ConfigMap Files
-
-AlertManager is configured through [alertmanager.yml](https://prometheus.io/docs/alerting/configuration/). This file (and any others listed in `alertmanagerFiles`) will be mounted into the `alertmanager` pod.
-
-Prometheus is configured through [prometheus.yml](https://prometheus.io/docs/operating/configuration/). This file (and any others listed in `serverFiles`) will be mounted into the `server` pod.
-
-### Ingress TLS
-
-If your cluster allows automatic creation/retrieval of TLS certificates (e.g. [cert-manager](https://github.com/jetstack/cert-manager)), please refer to the documentation for that mechanism.
-
-To manually configure TLS, first create/retrieve a key & certificate pair for the address(es) you wish to protect. Then create a TLS secret in the namespace:
-
-```console
-kubectl create secret tls prometheus-server-tls --cert=path/to/tls.cert --key=path/to/tls.key
-```
-
-Include the secret's name, along with the desired hostnames, in the alertmanager/server Ingress TLS section of your custom `values.yaml` file:
+If you want to enrich, transform, drop or keep some metrics, the typical regular expressions (regex) are applicable just as in any Prometheus configuration.
 
 ```yaml
 server:
-  ingress:
-    ## If true, Prometheus server Ingress will be created
-    ##
-    enabled: true
-
-    ## Prometheus server Ingress hostnames
-    ## Must be provided if Ingress is enabled
-    ##
-    hosts:
-      - prometheus.domain.com
-
-    ## Prometheus server Ingress TLS configuration
-    ## Secrets must be manually created in the namespace
-    ##
-    tls:
-      - secretName: prometheus-server-tls
-        hosts:
-          - prometheus.domain.com
+  remoteWrite:
+    - url: <new_relic_prometheus_endpoint_1>
+      bearer_token: "NEWRELIC_LICENSE_KEY_1"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: mynamespace
+          action: keep
 ```
 
-### NetworkPolicy
+## Example Scraping Cases
 
-Enabling Network Policy for Prometheus will secure connections to Alert Manager and Kube State Metrics by only accepting connections from Prometheus Server. All inbound connections to Prometheus Server are still allowed.
+### Example 1
 
-To enable network policy for Prometheus, install a networking plugin that implements the Kubernetes NetworkPolicy spec, and set `networkPolicy.enabled` to true.
+You want to scrape from every Kubernetes resource:
+- nodes
+- nodes/proxy
+- nodes/metrics
+- services
+- endpoints
+- pods
+- ingresses
+- configmaps
 
-If NetworkPolicy is enabled for Prometheus' scrape targets, you may also need to manually create a networkpolicy which allows it.
+**Input**
+```yaml
+newrelic:
+  scrape_case: nodes_and_namespaces
+  namespaces: []
+```
+
+**Output**
+- a `ClusterRole` with access on all resources
+- a `ClusterRoleBinding` for the `ClusterRole`
+
+### Example 2
+
+You want to scrape from nodes:
+- nodes
+- nodes/proxy
+- nodes/metrics
+
+and only from specific namespaces:
+- services
+- endpoints
+- pods
+- ingresses
+- configmaps
+
+**Input**
+```yaml
+newrelic:
+  scrape_case: nodes_and_namespaces
+  namespaces:
+    - mynamespace1
+    - mynamespace2
+```
+
+**Output**
+- a `ClusterRole` with access on nodes, nodes/proxy and nodes/metrics
+- a `ClusterRoleBinding` for the `ClusterRole`
+- a `Role` in each given namespace with access on services, endpoints, pods, ingresses and configmaps
+- a `RoleBinding` in each given namespace for the corresponding `Role`
+- a filter per each Prometheus namespaced `job` in `prometheus.yml`
+
+### Example 3
+
+You want to scrape only the nodes:
+- nodes
+- nodes/proxy
+- nodes/metrics
+
+**Input**
+```yaml
+newrelic:
+  scrape_case: just_nodes
+  namespaces: # will be ignored
+```
+
+**Output**
+- a `ClusterRole` with access on just nodes, nodes/proxy and nodes/metrics
+- a `ClusterRoleBinding` for the `ClusterRole`
+
+### Example 4
+
+You want to scrape from all:
+- services
+- endpoints
+- pods
+- ingresses
+- configmaps
+
+**Input**
+```yaml
+newrelic:
+  scrape_case: just_namespaces
+  namespaces: []
+```
+
+**Output**
+- a `ClusterRole` with access on services, endpoints, pods, ingresses and configmaps
+- a `ClusterRoleBinding` for the `ClusterRole`
+
+### Example 5
+
+You want to scrape from specific namespaces:
+- services
+- endpoints
+- pods
+- ingresses
+- configmaps
+
+**Input**
+```yaml
+newrelic:
+  scrape_case: just_namespaces
+  namespaces:
+    - mynamespace1
+    - mynamespace2
+```
+
+**Output**
+- a `Role` in each given namespace with access on services, endpoints, pods, ingresses and configmaps
+- a `RoleBinding` in each given namespace for the corresponding `Role`
+- a filter per each Prometheus namespaced `job` in `prometheus.yml`
+
+## Example Forwarding Cases
+
+### Example 1
+
+You have 1 ops team and 2 dev teams where each of them have their apps running in dedicated namespaces. You have already installed New Relic infrastructure agent which is reporting to your ops team.
+
+**What?**
+
+The dev teams want to know:
+- their infrastructure related performance metrics (CPU, MEM, STO...)
+
+**Why?**
+
+- Container metrics are to be scraped from the cAdvisor which is on the node level
+
+**How?**
+
+- scrape only from the nodes
+- filter the metrics according to individual namespaces
+- forward the filtered metrics to corresponding accounts
+
+```yaml
+newrelic:
+  scrape_case: just_nodes
+server:
+  remoteWrite:
+    - url: <new_relic_prometheus_endpoint>
+      bearer_token: "NEWRELIC_LICENSE_KEY_DEV_TEAM_1"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: dev-team-1
+          action: keep
+    - url: <new_relic_prometheus_endpoint>
+      bearer_token: "NEWRELIC_LICENSE_KEY_DEV_TEAM_2"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: dev-team-2
+          action: keep
+```
+
+## Example 2
+
+You have 2 dev teams where each of them have their apps running in dedicated namespaces.
+
+**What?**
+
+The dev teams want to know:
+- the custom metrics that they expose from their applications.
+
+**Why?**
+
+- Applications metrics are to be scraped from the namespaces and their Kubernetes manifests (`service`, `pod` or `endpoint`) are to be updated with Prometheus annotations (`prometheus.io/scrape: 'true'`, `prometheus.io/path: '/metrics'`, `prometheus.io/port: '8080'`)
+
+**How?**
+
+- scrape only from the relevant namespaces 
+- filter the metrics according to individual namespaces
+- forward the filtered metrics to corresponding accounts
+
+```yaml
+newrelic:
+  scrape_case: just_namespaces
+  namespaces:
+    - dev-team-1
+    - dev-team-2
+server:
+  remoteWrite:
+    - url: <new_relic_prometheus_endpoint>
+      bearer_token: "NEWRELIC_LICENSE_KEY_DEV_TEAM_1"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: dev-team-1
+          action: keep
+    - url: <new_relic_prometheus_endpoint>
+      bearer_token: "NEWRELIC_LICENSE_KEY_DEV_TEAM_2"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: dev-team-2
+          action: keep
+```
+
+## Example 3
+
+You have 1 ops team and 2 dev teams where each of them have their apps running in dedicated namespaces. You have already installed New Relic infrastructure agent which is reporting to your ops team.
+
+**What?**
+
+The dev teams want to know:
+- their infrastructure related performance metrics (CPU, MEM, STO...)
+- the custom metrics that they expose from their applications
+
+**Why?**
+
+- Container metrics are to be scraped from the cAdvisor which is on the node level
+- Applications metrics are to be scraped from the namespaces and their Kubernetes manifests (`service`, `pod` or `endpoint`) are to be updated with Prometheus annotations (`prometheus.io/scrape: 'true'`, `prometheus.io/path: '/metrics'`, `prometheus.io/port: '8080'`)
+
+**How?**
+
+- scrape from the nodes
+- scrape only from the relevant namespaces 
+- filter the metrics according to individual namespaces
+- forward the filtered metrics to corresponding accounts
+
+```yaml
+newrelic:
+  scrape_case: nodes_and_namespaces
+  namespaces:
+    - dev-team-1
+    - dev-team-2
+server:
+  remoteWrite:
+    - url: <new_relic_prometheus_endpoint>
+      bearer_token: "NEWRELIC_LICENSE_KEY_DEV_TEAM_1"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: dev-team-1
+          action: keep
+    - url: <new_relic_prometheus_endpoint>
+      bearer_token: "NEWRELIC_LICENSE_KEY_DEV_TEAM_2"
+      write_relabel_configs:
+        - source_labels: [namespace]
+          regex: dev-team-2
+          action: keep
+```
