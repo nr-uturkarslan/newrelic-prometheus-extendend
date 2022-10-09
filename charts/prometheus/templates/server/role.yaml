@@ -2,23 +2,34 @@
 {{ range $.Values.newrelic.namespaces }}
 ---
 apiVersion: {{ template "rbac.apiVersion" $ }}
-kind: RoleBinding
+kind: Role
 metadata:
   labels:
     {{- include "prometheus.server.labels" $ | nindent 4 }}
   name: {{ template "prometheus.server.fullname" $ }}
   namespace: {{ . }}
-subjects:
-  - kind: ServiceAccount
-    name: {{ template "prometheus.serviceAccountName.server" $ }}
-{{ include "prometheus.namespace" $ | indent 4 }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-{{- if eq $.Values.newrelic.scrape_case "nodes_and_namespaces" }}
-  kind: ClusterRole
-{{- else }}
-  kind: Role
-{{- end }}
-  name: {{ template "prometheus.server.fullname" $ }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - pods
+      - ingresses
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - "extensions"
+      - "networking.k8s.io"
+    resources:
+      - ingresses/status
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
 {{- end }}
 {{- end }}
