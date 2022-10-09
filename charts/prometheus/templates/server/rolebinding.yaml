@@ -14,11 +14,7 @@ subjects:
 {{ include "prometheus.namespace" $ | indent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-{{- if eq $.Values.newrelic.scrape_case "nodes_and_namespaces" }}
-  kind: ClusterRole
-{{- else }}
   kind: Role
-{{- end }}
   name: {{ template "prometheus.server.fullname" $ }}
 {{- end }}
 {{- end }}

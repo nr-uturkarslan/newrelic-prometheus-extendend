@@ -25,7 +25,7 @@ rules:
       - nodes/proxy
       - nodes/metrics
 {{- end }}
-{{- if ne .Values.newrelic.scrape_case "just_nodes" }}
+{{- if and (empty .Values.newrelic.namespaces) (ne .Values.newrelic.scrape_case "just_nodes") }}
       - services
       - endpoints
       - pods
@@ -36,7 +36,7 @@ rules:
       - get
       - list
       - watch
-{{- if ne .Values.newrelic.scrape_case "just_nodes" }}
+{{- if and (empty .Values.newrelic.namespaces) (ne .Values.newrelic.scrape_case "just_nodes") }}
   - apiGroups:
       - "extensions"
       - "networking.k8s.io"
