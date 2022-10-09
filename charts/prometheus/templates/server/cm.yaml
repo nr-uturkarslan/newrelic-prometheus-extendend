@@ -61,13 +61,6 @@ data:
           insecure_skip_verify: true
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         kubernetes_sd_configs:
-{{- if .Values.newrelic.namespaces }}
-            namespaces:
-              names:
-{{- range .Values.newrelic.namespaces }}
-                - {{ . }}
-{{- end }}
-{{- end }}
           - role: node
         relabel_configs:
           - action: labelmap
@@ -87,13 +80,6 @@ data:
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         kubernetes_sd_configs:
           - role: node
-{{- if .Values.newrelic.namespaces }}
-            namespaces:
-              names:
-{{- range .Values.newrelic.namespaces }}
-                - {{ . }}
-{{- end }}
-{{- end }}
         relabel_configs:
           - action: labelmap
             regex: __meta_kubernetes_node_label_(.+)
