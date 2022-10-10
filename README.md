@@ -15,3 +15,7 @@ When it comes to New Relic for observability, it is a quite often case where due
 However, the dev teams can require some insights regarding the infrastructure or the ops team can deploy & maintain some common apps for everyone (Kafka, DBs, custom apps...) and want to know more about them.
 
 This repo is meant to satisfy such common use cases with genericly configurable manifests.
+
+## Chart configuration
+
+How to set the variables for different use cases can be found here: [Chart configuration](charts/prometheus/README.md)
