@@ -669,35 +669,11 @@ server:
       # seccomp.security.alpha.kubernetes.io/defaultProfileName: 'docker/default'
       # apparmor.security.beta.kubernetes.io/defaultProfileName: 'runtime/default'
 
-  ## Use a StatefulSet if replicaCount needs to be greater than 1 (see below)
-  ##
   replicaCount: 1
 
   ## Annotations to be added to deployment
   ##
   deploymentAnnotations: {}
-
-  statefulSet:
-    ## If true, use a statefulset instead of a deployment for pod management.
-    ## This allows to scale replicas to more than 1 pod
-    ##
-    enabled: false
-
-    annotations: {}
-    labels: {}
-    podManagementPolicy: OrderedReady
-
-    ## Alertmanager headless service to use for the statefulset
-    ##
-    headless:
-      annotations: {}
-      labels: {}
-      servicePort: 80
-      ## Enable gRPC port on service to allow auto discovery with thanos-querier
-      gRPC:
-        enabled: false
-        servicePort: 10901
-        # nodePort: 10901
 
   ## Prometheus server readiness and liveness probe initial delay and timeout
   ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
@@ -745,7 +721,7 @@ server:
   ## Vertical Pod Autoscaler config
   ## Ref: https://github.com/kubernetes/autoscaler/tree/master/vertical-pod-autoscaler
   verticalAutoscaler:
-    ## If true a VPA object will be created for the controller (either StatefulSet or Deployemnt, based on above configs)
+    ## If true a VPA object will be created for the controller
     enabled: false
     # updateMode: "Auto"
     # containerPolicies:
@@ -798,13 +774,6 @@ server:
       enabled: false
       servicePort: 10901
       # nodePort: 10901
-
-    ## If using a statefulSet (statefulSet.enabled=true), configure the
-    ## service to connect to a specific replica to have a consistent view
-    ## of the data.
-    statefulsetReplica:
-      enabled: false
-      replica: 0
 
   ## Prometheus server pod termination grace period
   ##
