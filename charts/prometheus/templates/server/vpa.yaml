@@ -10,11 +10,7 @@ metadata:
 spec:
   targetRef:
     apiVersion: "apps/v1"
-{{- if .Values.server.statefulSet.enabled }}
-    kind: StatefulSet
-{{- else }}
     kind: Deployment
-{{- end }}
     name: {{ template "prometheus.server.fullname" . }}
   updatePolicy:
     updateMode: {{ .Values.server.verticalAutoscaler.updateMode | default "Off" | quote }}
