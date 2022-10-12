@@ -8,54 +8,11 @@ newrelic:
   scrape_case: "nodes_and_namespaces"
 
   ## List of the namespaces to be scraped
+  ## If empty, all namespaces will be scraped
   ##
   namespaces: []
-    # - ns1
-    # - ns2
-
-  ### REMARK ###
-  ## ------- Example 1 -------
-  ##   Input
-  ##   - scrape_case: nodes_and_namespaces
-  ##   - namespaces: []
-  ##   Output
-  ##   - a cluster role with access on all resources
-  ##   - a cluster role binding for the cluster role
-  ## ------- Example 2 -------
-  ##   Input
-  ##   - scrape_case: nodes_and_namespaces
-  ##   - namespaces: [ns1, ns2]
-  ##   Output
-  ##   - a cluster role with access on all resources
-  ##   - a cluster role binding for the cluster role
-  ##   - a role binding in each given namespace for the cluster role
-  ## ------- Example 3 -------
-  ##   Input
-  ##   - scrape_case: just_nodes
-  ##   - namespaces: []
-  ##   Output
-  ##   - a cluster role with access on just [nodes, nodes/proxy, nodes/metrics]
-  ##   - a cluster role binding for the cluster role
-  ## ------- Example 4 -------
-  ##   Input
-  ##   - scrape_case: just_nodes
-  ##   - namespaces: [ns1, ns2]
-  ##   Output
-  ##   - same as example 3 -> namespaces will be ignored
-  ## ------- Example 5 -------
-  ##   Input
-  ##   - scrape_case: just_namespaces
-  ##   - namespaces: []
-  ##   Output
-  ##   - a cluster role with access on just [services, endpoints, pods, ingresses, configmaps]
-  ##   - a cluster role binding for the cluster role
-  ## ------- Example 6 -------
-  ##   Input
-  ##   - scrape_case: just_namespaces
-  ##   - namespaces: [ns1, ns2]
-  ##   Output
-  ##   - a role in each given namespaces with access on just [services, endpoints, pods, ingresses, configmaps]
-  ##   - a role binding in each given namespaces for the role
+    # - namespace1
+    # - namespace2
 
 rbac:
   create: true
