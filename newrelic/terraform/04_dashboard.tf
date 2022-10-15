@@ -760,7 +760,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT rate(average(container_cpu_usage_seconds_total), 1 second)*1000 AS `usage` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' FACET container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`usage`) FACET container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT rate(average(container_cpu_usage_seconds_total), 1 second)*1000 AS `usage` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`usage`) FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
@@ -779,7 +779,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT rate(average(container_cpu_usage_seconds_total), 1 second)*1000 AS `usage`, filter(average(kube_pod_container_resource_limits)*1000, WHERE resource = 'cpu') AS `limit` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND (job = 'kubernetes-nodes-cadvisor' OR service = 'prometheus-kube-state-metrics') FACET container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`usage`)/average(`limit`)*100 FACET container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT rate(average(container_cpu_usage_seconds_total), 1 second)*1000 AS `usage`, filter(average(kube_pod_container_resource_limits)*1000, WHERE resource = 'cpu') AS `limit` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND (job = 'kubernetes-nodes-cadvisor' OR service = 'prometheus-kube-state-metrics') AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`usage`)/average(`limit`)*100 FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
@@ -817,7 +817,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT average(container_memory_usage_bytes) AS `usage`, filter(average(kube_pod_container_resource_limits), WHERE resource = 'memory') AS `limit` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND (job = 'kubernetes-nodes-cadvisor' OR service = 'prometheus-kube-state-metrics' AND container IS NOT NULL AND pod IS NOT NULL) FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`usage`)/average(`limit`)*100 FACET pod, container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT average(container_memory_usage_bytes) AS `usage`, filter(average(kube_pod_container_resource_limits), WHERE resource = 'memory') AS `limit` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND (job = 'kubernetes-nodes-cadvisor' OR service = 'prometheus-kube-state-metrics') AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`usage`)/average(`limit`)*100 FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
@@ -836,7 +836,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT rate(average(container_fs_reads_total), 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT rate(average(container_fs_reads_total), 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
@@ -855,7 +855,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT rate(average(container_fs_writes_total), 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT rate(average(container_fs_writes_total), 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
@@ -874,7 +874,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT rate(average(container_network_receive_bytes_total)/1024/1024, 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT rate(average(container_network_receive_bytes_total)/1024/1024, 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
@@ -893,7 +893,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT rate(average(container_network_transmit_bytes_total)/1024/1024, 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
+            "query": "FROM (FROM Metric SELECT rate(average(container_network_transmit_bytes_total)/1024/1024, 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' AND container IS NOT NULL AND pod IS NOT NULL FACET pod, container TIMESERIES 5 minutes SLIDE BY 10 seconds LIMIT MAX) SELECT average(`rate`) FACET pod, container TIMESERIES AUTO"
           }
         ]
       })
