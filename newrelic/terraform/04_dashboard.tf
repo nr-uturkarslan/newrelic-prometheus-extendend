@@ -217,24 +217,38 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     }
   }
 
-  # Node Overview (nodes)
+  # Node Overview
   page {
-    name = "Node Overview (nodes)"
+    name = "Node Overview"
 
-    # Nodes
+    # Page Description
     widget {
-      title  = "Nodes"
+      title  = "Page Description"
       row    = 1
       column = 1
-      height = 4
-      width  = 3
+      height = 2
+      width  = 4
+      visualization_id = "viz.markdown"
+      configuration = jsonencode(
+      {
+        "text": "## Node Overview\nTo be able to visualize every widget properly, Prometheus should be able to scrape the following resources:\n- Nodes Endpoints\n- Node Exporter\n- Kube State Metrics"
+      })
+    }
+
+    # Node Capacities
+    widget {
+      title  = "Node Capacities"
+      row    = 2
+      column = 1
+      height = 3
+      width  = 4
       visualization_id = "viz.table"
       configuration = jsonencode(
       {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM Metric SELECT uniques(instance) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes'"
+            "query": "FROM Metric SELECT max(machine_cpu_cores) AS 'CPU (cores)', max(machine_memory_bytes)/1024/1024/1024 AS 'MEM (GB)' WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' FACET instance"
           }
         ]
       })
@@ -244,8 +258,8 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     widget {
       title  = "Node to Pod Map"
       row    = 1
-      column = 4
-      height = 4
+      column = 5
+      height = 5
       width  = 4
       visualization_id = "viz.table"
       configuration = jsonencode(
@@ -259,13 +273,32 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
       })
     }
 
+    # Num Namespaces by Nodes
+    widget {
+      title  = "Num Namespaces by Nodes"
+      row    = 1
+      column = 9
+      height = 2
+      width  = 4
+      visualization_id = "viz.line"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM Metric SELECT uniqueCount(namespace) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes' AND pod IS NOT NULL FACET instance TIMESERIES AUTO"
+          }
+        ]
+      })
+    }
+
     # Num Pods by Nodes
     widget {
       title  = "Num Pods by Nodes"
-      row    = 1
-      column = 8
-      height = 4
-      width  = 5
+      row    = 2
+      column = 9
+      height = 3
+      width  = 4
       visualization_id = "viz.line"
       configuration = jsonencode(
       {
@@ -277,16 +310,11 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         ]
       })
     }
-  }
-
-  # Node Overview (node exporter)
-  page {
-    name = "Node Overview (node exporter)"
 
     # Node CPU Usage (mCPU)
     widget {
       title  = "Node CPU Usage (mCPU)"
-      row    = 1
+      row    = 3
       column = 1
       width  = 6
       visualization_id = "viz.area"
@@ -304,7 +332,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Node CPU Utilization (%)
     widget {
       title  = "Node CPU Utilization (%)"
-      row    = 1
+      row    = 3
       column = 7
       width  = 6
       visualization_id = "viz.line"
@@ -322,7 +350,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Node MEM Usage (GB)
     widget {
       title  = "Node MEM Usage (GB)"
-      row    = 2
+      row    = 4
       column = 1
       width  = 6
       visualization_id = "viz.area"
@@ -340,7 +368,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Node MEM Utilization (%)
     widget {
       title  = "Node MEM Utilization (%)"
-      row    = 2
+      row    = 4
       column = 7
       width  = 6
       visualization_id = "viz.line"
@@ -358,7 +386,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Node STO Usage (GB)
     widget {
       title  = "Node STO Usage (GB)"
-      row    = 3
+      row    = 5
       column = 1
       width  = 6
       visualization_id = "viz.area"
@@ -376,7 +404,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Node STO Utilization (%)
     widget {
       title  = "Node STO Utilization (%)"
-      row    = 3
+      row    = 5
       column = 7
       width  = 6
       visualization_id = "viz.line"
