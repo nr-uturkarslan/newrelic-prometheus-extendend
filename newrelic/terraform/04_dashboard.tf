@@ -217,7 +217,9 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     }
   }
 
-  # Node Overview
+  #####################
+  ### NODE OVERVIEW ###
+  #####################
   page {
     name = "Node Overview"
 
@@ -248,7 +250,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM Metric SELECT max(machine_cpu_cores) AS 'CPU (cores)', max(machine_memory_bytes)/1024/1024/1024 AS 'MEM (GB)' WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' FACET instance"
+            "query": "FROM Metric SELECT max(machine_cpu_cores) AS 'CPU (cores)', max(machine_memory_bytes)/1024/1024/1024 AS 'MEM (GB)' WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor' FACET instance"
           }
         ]
       })
@@ -420,7 +422,182 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     }
   }
 
-  # Container Overview
+  ##########################
+  ### NAMESPACE OVERVIEW ###
+  ##########################
+  page {
+    name = "Namespace Overview"
+
+    # Page Description
+    widget {
+      title  = "Page Description"
+      row    = 1
+      column = 1
+      height = 2
+      width  = 4
+      visualization_id = "viz.markdown"
+      configuration = jsonencode(
+      {
+        "text": "## Namespace Overview\nTo be able to visualize every widget properly, Prometheus should be able to scrape the following resources:\n- Node cAdvisor\n- Kube State Metrics"
+      })
+    }
+
+    # Namespaces
+    widget {
+      title  = "Namespaces"
+      row    = 1
+      column = 5
+      height = 2
+      width  = 2
+      visualization_id = "viz.table"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM Metric SELECT uniques(namespace) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes'"
+          }
+        ]
+      })
+    }
+
+    # Deployments in Namespaces
+    widget {
+      title  = "Deployments in Namespaces"
+      row    = 1
+      column = 7
+      height = 2
+      width  = 2
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM Metric SELECT uniqueCount(deployment) OR 0 WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' FACET namespace"
+          }
+        ]
+      })
+    }
+
+    # DaemonSets in Namespaces
+    widget {
+      title  = "DaemonSets in Namespaces"
+      row    = 1
+      column = 9
+      height = 2
+      width  = 2
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM Metric SELECT uniqueCount(daemonset) OR 0 WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' FACET namespace"
+          }
+        ]
+      })
+    }
+
+    # StatefulSets in Namespaces
+    widget {
+      title  = "StatefulSets in Namespaces"
+      row    = 1
+      column = 11
+      height = 2
+      width  = 2
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM Metric SELECT uniqueCount(statefulset) OR 0 WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' FACET namespace"
+          }
+        ]
+      })
+    }
+
+    # Pods in Namespaces (Running)
+    widget {
+      title  = "Pods in Namespaces (Running)"
+      row    = 3
+      column = 1
+      height = 3
+      width  = 3
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `running` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Running' FACET namespace, pod LIMIT MAX) SELECT sum(`running`) FACET namespace"
+          }
+        ]
+      })
+    }
+
+    # Pods in Namespaces (Pending)
+    widget {
+      title  = "Pods in Namespaces (Pending)"
+      row    = 3
+      column = 4
+      height = 3
+      width  = 3
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `pending` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Pending' FACET namespace, pod LIMIT MAX) SELECT sum(`pending`) FACET namespace"
+          }
+        ]
+      })
+    }
+
+    # Pods in Namespaces (Failed)
+    widget {
+      title  = "Pods in Namespaces (Failed)"
+      row    = 3
+      column = 7
+      height = 3
+      width  = 3
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `failed` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Failed' FACET namespace, pod LIMIT MAX) SELECT sum(`failed`) FACET namespace"
+          }
+        ]
+      })
+    }
+
+    # Pods in Namespaces (Unknown)
+    widget {
+      title  = "Pods in Namespaces (Unknown)"
+      row    = 3
+      column = 10
+      height = 3
+      width  = 3
+      visualization_id = "viz.bar"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `unknown` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Unknown' FACET namespace, pod LIMIT MAX) SELECT sum(`unknown`) FACET namespace"
+          }
+        ]
+      })
+    }
+  }
+
+  ##########################
+  ### CONTAINER OVERVIEW ###
+  ##########################
   page {
     name = "Container Overview"
 
@@ -451,7 +628,7 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
         "nrqlQueries": [
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM Metric SELECT uniques(container) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}'"
+            "query": "FROM Metric SELECT uniques(container) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND job = 'kubernetes-nodes-cadvisor'"
           }
         ]
       })
