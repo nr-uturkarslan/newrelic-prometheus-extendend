@@ -19,3 +19,8 @@ variable "NEW_RELIC_REGION" {
   type = string
 }
 ######
+
+# Prometheus Server Name
+variable "prometheus_server_name" {
+  type = string
+}

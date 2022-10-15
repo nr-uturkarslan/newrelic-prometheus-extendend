@@ -17,6 +17,11 @@ while (( "$#" )); do
   esac
 done
 
+### Set variables
+
+# Cluster name
+clusterName="mydopecluster"
+
 if [[ $flagDestroy != "true" ]]; then
 
   # Initialise Terraform
@@ -27,6 +32,7 @@ if [[ $flagDestroy != "true" ]]; then
     -var NEW_RELIC_ACCOUNT_ID=$NEWRELIC_ACCOUNT_ID \
     -var NEW_RELIC_API_KEY=$NEWRELIC_API_KEY \
     -var NEW_RELIC_REGION="eu" \
+    -var prometheus_server_name=$clusterName \
     -out "./tfplan"
 
   # Apply Terraform
@@ -39,5 +45,6 @@ else
   terraform -chdir=../newrelic/terraform destroy \
   -var NEW_RELIC_ACCOUNT_ID=$NEWRELIC_ACCOUNT_ID \
   -var NEW_RELIC_API_KEY=$NEWRELIC_API_KEY \
-  -var NEW_RELIC_REGION="eu"
+  -var NEW_RELIC_REGION="eu" \
+  -var prometheus_server_name=$clusterName
 fi
