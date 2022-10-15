@@ -420,14 +420,161 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     }
   }
 
-  # Container Overview (cadvisor + ksm)
+  # Container Overview
   page {
-    name = "Container Overview (cadvisor + ksm)"
+    name = "Container Overview"
+
+    # Page Description
+    widget {
+      title  = "Page Description"
+      row    = 1
+      column = 1
+      height = 2
+      width  = 4
+      visualization_id = "viz.markdown"
+      configuration = jsonencode(
+      {
+        "text": "## Container Overview\nTo be able to visualize every widget properly, Prometheus should be able to scrape the following resources:\n- Node cAdvisor\n- Kube State Metrics"
+      })
+    }
+
+    # Containers
+    widget {
+      title  = "Containers"
+      row    = 1
+      column = 5
+      height = 4
+      width  = 4
+      visualization_id = "viz.table"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM Metric SELECT uniques(container) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}'"
+          }
+        ]
+      })
+    }
+
+    # Container (Ready)
+    widget {
+      title  = "Container (Ready)"
+      row    = 3
+      column = 1
+      height = 2
+      width  = 2
+      visualization_id = "viz.billboard"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_container_status_ready) AS `ready` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' FACET container LIMIT MAX) SELECT sum(`ready`)"
+          }
+        ]
+      })
+    }
+
+    # Container (Waiting)
+    widget {
+      title  = "Container (Waiting)"
+      row    = 3
+      column = 3
+      height = 2
+      width  = 2
+      visualization_id = "viz.billboard"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_container_status_waiting) AS `waiting` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' FACET container LIMIT MAX) SELECT sum(`waiting`)"
+          }
+        ]
+      })
+    }
+
+    # Pod (Running)
+    widget {
+      title  = "Pod (Running)"
+      row    = 1
+      column = 9
+      height = 2
+      width  = 2
+      visualization_id = "viz.billboard"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `running` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Running' FACET pod LIMIT MAX) SELECT sum(`running`)"
+          }
+        ]
+      })
+    }
+
+    # Pod (Pending)
+    widget {
+      title  = "Pod (Pending)"
+      row    = 1
+      column = 11
+      height = 2
+      width  = 2
+      visualization_id = "viz.billboard"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `pending` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Pending' FACET pod LIMIT MAX) SELECT sum(`pending`)"
+          }
+        ]
+      })
+    }
+
+    # Pod (Failed)
+    widget {
+      title  = "Pod (Failed)"
+      row    = 3
+      column = 9
+      height = 2
+      width  = 2
+      visualization_id = "viz.billboard"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `failed` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Failed' FACET pod LIMIT MAX) SELECT sum(`failed`)"
+          }
+        ]
+      })
+    }
+
+    # Pod (Unknown)
+    widget {
+      title  = "Pod (Unknown)"
+      row    = 3
+      column = 11
+      height = 2
+      width  = 2
+      visualization_id = "viz.billboard"
+      configuration = jsonencode(
+      {
+        "nrqlQueries": [
+          {
+            "accountId": var.NEW_RELIC_ACCOUNT_ID,
+            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_phase) AS `unknown` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' AND service = 'prometheus-kube-state-metrics' AND phase = 'Unknown' FACET pod LIMIT MAX) SELECT sum(`unknown`)"
+          }
+        ]
+      })
+    }
 
     # Container CPU Usage (mCPU)
     widget {
       title  = "Container CPU Usage (mCPU)"
-      row    = 1
+      row    = 5
       column = 1
       width  = 6
       visualization_id = "viz.area"
@@ -445,9 +592,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container CPU Utilization (%)
     widget {
       title  = "Container CPU Utilization (%)"
-      row    = 1
+      row    = 5
       column = 7
       width  = 6
+      height = 3
       visualization_id = "viz.line"
       configuration = jsonencode(
       {
@@ -463,9 +611,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container MEM Usage (GB)
     widget {
       title  = "Container MEM Usage (GB)"
-      row    = 2
+      row    = 8
       column = 1
       width  = 6
+      height = 3
       visualization_id = "viz.area"
       configuration = jsonencode(
       {
@@ -481,9 +630,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container MEM Utilization (%)
     widget {
       title  = "Container MEM Utilization (%)"
-      row    = 2
+      row    = 8
       column = 7
       width  = 6
+      height = 3
       visualization_id = "viz.line"
       configuration = jsonencode(
       {
@@ -499,9 +649,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container File System Read Rate (1/s)
     widget {
       title  = "Container File System Read Rate (1/s)"
-      row    = 3
+      row    = 11
       column = 1
       width  = 6
+      height = 3
       visualization_id = "viz.area"
       configuration = jsonencode(
       {
@@ -517,9 +668,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container File System Write Rate (1/s)
     widget {
       title  = "Container File System Write Rate (1/s)"
-      row    = 3
+      row    = 11
       column = 7
       width  = 6
+      height = 3
       visualization_id = "viz.area"
       configuration = jsonencode(
       {
@@ -535,9 +687,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container Network Receive Rate (MB/s)
     widget {
       title  = "Container Network Receive Rate (MB/s)"
-      row    = 4
+      row    = 14
       column = 1
       width  = 6
+      height = 3
       visualization_id = "viz.area"
       configuration = jsonencode(
       {
@@ -553,9 +706,10 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
     # Container Network Transmit Rate (MB/s)
     widget {
       title  = "Container Network Transmit Rate (MB/s)"
-      row    = 4
+      row    = 14
       column = 7
       width  = 6
+      height = 3
       visualization_id = "viz.area"
       configuration = jsonencode(
       {
@@ -563,86 +717,6 @@ resource "newrelic_one_dashboard_raw" "kubernetes_prometheus" {
           {
             "accountId": var.NEW_RELIC_ACCOUNT_ID,
             "query": "FROM (FROM Metric SELECT rate(average(container_network_transmit_bytes_total)/1024/1024, 1 SECOND) AS `rate` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = 'mydopecluster' AND job = 'kubernetes-nodes-cadvisor' FACET container TIMESERIES 5 minutes SLIDE BY 10 seconds) SELECT average(`rate`) FACET container TIMESERIES AUTO"
-          }
-        ]
-      })
-    }
-  }
-
-  # Container Overview (ksm)
-  page {
-    name = "Container Overview (ksm)"
-
-    # Containers
-    widget {
-      title  = "Containers"
-      row    = 1
-      column = 1
-      height = 4
-      width  = 3
-      visualization_id = "viz.table"
-      configuration = jsonencode(
-      {
-        "nrqlQueries": [
-          {
-            "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM Metric SELECT uniques(container) WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}'"
-          }
-        ]
-      })
-    }
-
-    # Pod (Ready)
-    widget {
-      title  = "Pod (Ready)"
-      row    = 1
-      column = 4
-      height = 2
-      width  = 2
-      visualization_id = "viz.billboard"
-      configuration = jsonencode(
-      {
-        "nrqlQueries": [
-          {
-            "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_ready) AS `num_ready` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' FACET pod) SELECT sum(`num_ready`)"
-          }
-        ]
-      })
-    }
-    # Pod (Scheduled)
-    widget {
-      title  = "Pod (Scheduled)"
-      row    = 1
-      column = 4
-      height = 2
-      width  = 2
-      visualization_id = "viz.billboard"
-      configuration = jsonencode(
-      {
-        "nrqlQueries": [
-          {
-            "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT latest(kube_pod_status_scheduled) AS `num_scheduled` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' FACET pod) SELECT sum(`num_scheduled`)"
-          }
-        ]
-      })
-    }
-
-    # Container Restarts
-    widget {
-      title  = "Container Restarts"
-      row    = 1
-      column = 4
-      height = 2
-      width  = 2
-      visualization_id = "viz.billboard"
-      configuration = jsonencode(
-      {
-        "nrqlQueries": [
-          {
-            "accountId": var.NEW_RELIC_ACCOUNT_ID,
-            "query": "FROM (FROM Metric SELECT average(kube_pod_container_status_restarts_total) AS `num_restarts` WHERE instrumentation.provider = 'prometheus' AND prometheus_server = '${var.prometheus_server_name}' FACET container) SELECT sum(`num_restarts`)"
           }
         ]
       })
